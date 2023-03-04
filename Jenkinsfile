@@ -1,10 +1,18 @@
-pipeline {
+pipeline{
     agent any
-
-    stages {
-        stage('Deploy PHP') {
-            steps {
-                sshPublisher(publishers: [sshPublisherDesc(configName: 'Php_server', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/var/www/html/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '**/*.php')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+    environment{
+        staging_server="10.55.80.100"
+    }
+    stages{
+        stage('Deploy to Remote'){
+            steps{
+                sh '''
+                    for fileName in `find ${WORKSPACE} -type f -mmin -10 | grep -v ".git" | grep -v "Jenkinsfile"`
+                    do
+                        fil=$(echo ${fileName} | sed 's/'"${JOB_NAME}"'/ /' | awk {'print $2'})
+                        scp -r ${WORKSPACE}${fil} root@${staging_server}:/var/www/html/mbaquatech${fil}
+                    done
+                '''
             }
         }
     }
