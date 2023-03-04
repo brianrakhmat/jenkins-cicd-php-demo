@@ -1,18 +1,10 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        staging_server="103.30.194.4"
-    }
-    stages{
-        stage('Deploy to Remote'){
-            steps{
-                sh '''
-                    for fileName in `find ${WORKSPACE} -type f -mmin -10 | grep -v ".git" | grep -v "Jenkinsfile"`
-                    do
-                        fil=$(echo ${fileName} | sed 's/'"${JOB_NAME}"'/ /' | awk {'print $2'})
-                        scp -r ${WORKSPACE}${fil} itopr@${staging_server}:/var/www/html${fil}
-                    done
-                '''
+
+    stages {
+        stage('Deploy PHP application') {
+            steps {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'php_server', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/var/www/html/', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '**/*.php')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
             }
         }
     }
